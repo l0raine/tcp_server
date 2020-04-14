@@ -1,8 +1,9 @@
 #include "include.h"
 #include "io.h"
+#include "callbacks.h"
 
 int main(int argc, char* argv[]) {
-	io::init();
+  io::init();
 
   std::vector<std::string> cmdline(argv + 1, argv + argc);
   std::unordered_map<std::string, std::optional<std::string>> args;
@@ -40,24 +41,27 @@ int main(int argc, char* argv[]) {
   if(ret != 0){
   	io::get()->error("failed to get address info.");
   	close(server_socket);
-  	abort();
+  	exit(0);
   }
 
-  ret = bind(m_socket, addrinfo->ai_addr, addrinfo->ai_addrlen);
+  io::get()->info("binding port...");
+  ret = bind(server_socket, addrinfo->ai_addr, addrinfo->ai_addrlen);
   if(ret < 0){
   	io::get()->error("failed to bind port.");
   	close(server_socket);
-  	abort();
+  	exit(0);
   }
 
-  ret = listen(m_socket, SOMAXCONN);
+  ret = listen(server_socket, SOMAXCONN);
   if (ret < 0) {
     io::get()->error("failed to listen.");
   	close(server_socket);
-  	abort();
+  	exit(0);
   }
 
-  
+  io::get()->info("server listening for new connections.");
 
+  std::thread t{callbacks::server_loop, server_socket};
+  t.join();
 
 }
