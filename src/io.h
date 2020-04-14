@@ -7,8 +7,9 @@
 namespace io {
 static std::shared_ptr<spdlog::logger> logger;
 
-void init(){
-  spdlog::sink_ptr sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+void init() {
+  spdlog::sink_ptr sink =
+      std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   sink->set_pattern("%^[+]%$ %v");
 
   logger = std::make_shared<spdlog::logger>("server", sink);

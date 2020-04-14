@@ -11,5 +11,8 @@ cmake ..
 make
 ```
 
+## Contributing
+Please make sure you format your code using clang with the Google style before your contribute.
+
 ## Credits 
 - [spdlog](https://github.com/gabime/spdlog)
