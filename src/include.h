@@ -19,6 +19,11 @@
 #include <iomanip>
 #include <map>
 #include <random>
+#include <list>
+#include <utility>
+#include <atomic>
+#include <mutex>
+#include <future>
 
 #include <arpa/inet.h>
 #include <netdb.h>

@@ -1,6 +1,8 @@
 #include "include.h"
 #include "io.h"
-#include "callbacks.h"
+#include "events.h"
+#include "client.h"
+#include "server.h"
 
 int main(int argc, char* argv[]) {
   io::init();
@@ -21,45 +23,28 @@ int main(int argc, char* argv[]) {
   auto port = args["-p"].value_or("6666");
   io::get()->info("starting local server on port {}", port);
 
-  int server_socket = socket(AF_INET, SOCK_STREAM, 0);
-  if (server_socket == -1) {
-    io::get()->error("failed to create server socket.");
-    abort();
-  }
-
-  struct addrinfo hints, *addrinfo = nullptr;
-
-  memset(&hints, 0, sizeof hints);
-
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP;
-  hints.ai_flags = AI_PASSIVE;
-
-  int ret = getaddrinfo(nullptr, port.c_str(), &hints, &addrinfo);
-  if (ret != 0) {
-    io::get()->error("failed to get address info.");
-    close(server_socket);
-    exit(0);
-  }
-
-  io::get()->info("binding port...");
-  ret = bind(server_socket, addrinfo->ai_addr, addrinfo->ai_addrlen);
-  if (ret < 0) {
-    io::get()->error("failed to bind port.");
-    close(server_socket);
-    exit(0);
-  }
-
-  ret = listen(server_socket, SOMAXCONN);
-  if (ret < 0) {
-    io::get()->error("failed to listen.");
-    close(server_socket);
-    exit(0);
-  }
+  tcp::server server;
+  server.start(port);
 
   io::get()->info("server listening for new connections.");
 
-  std::thread t{callbacks::server_loop, server_socket};
-  t.join();
+  server.on_connect().add([&](tcp::client_data_t data) {
+    io::get()->info("client {} connected.", data.m_client.get_ip());
+  });
+
+  server.on_recv().add([&](tcp::message_data_t data) {
+    // io::get()->info(data.m_msg);
+    auto socket = data.m_client.get_socket();
+    for (auto& c : server.get_clients()) {
+      if (c.get_socket() != socket) {
+        c.send_message(data.m_msg);
+      }
+    }
+  });
+
+  server.on_disconnect().add([&](tcp::client_data_t data) {
+    io::get()->info("{} disconnected.", data.m_client.get_ip());
+  });
+
+  server.main_loop();
 }
