@@ -5,6 +5,8 @@ The server only works on linux, I'll be accepting pull requests if anyone wants 
 
 ## How to build
 ```
+git clone https://github.com/alpine971/tcp_server.git --recursive
+cd tcp_server
 mkdir build
 cd build
 cmake ..
