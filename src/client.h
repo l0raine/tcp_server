@@ -13,6 +13,6 @@ class client {
     return sent == msg.size();
   }
 
-  int &get_socket() const { return m_socket; }
+  int &get_socket() { return m_socket; }
   auto &get_ip() const { return m_ip; }
 };

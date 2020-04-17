@@ -82,7 +82,7 @@ class server {
     FD_SET(m_socket, &m_server_set);
 
     int maxfd = m_socket;
-    for (const auto &c : m_clients) {
+    for (auto &c : m_clients) {
       int s = c.get_socket();
       FD_SET(s, &m_server_set);
 
