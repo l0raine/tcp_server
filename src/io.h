@@ -16,5 +16,5 @@ void init() {
   spdlog::register_logger(logger);
 }
 
-auto get() { return logger; }
+auto &get() { return logger; }
 };  // namespace io

@@ -24,27 +24,31 @@ int main(int argc, char* argv[]) {
   io::get()->info("starting local server on port {}", port);
 
   tcp::server server;
-  server.start(port);
+  if(!server.start(port))
+    return 0;
 
   io::get()->info("server listening for new connections.");
 
-  server.on_connect().add([&](tcp::client_data_t data) {
+  server.on_connect().add([&](tcp::client_data_t &data) {
     io::get()->info("client {} connected.", data.m_client.get_ip());
   });
 
-  server.on_recv().add([&](tcp::message_data_t data) {
-    // io::get()->info(data.m_msg);
-    auto socket = data.m_client.get_socket();
+  server.on_recv().add([&](tcp::message_data_t &sender) {
+    // io::get()->info(sender.m_msg);
+    auto socket = sender.m_client.get_socket();
+    auto ip = sender.m_client.get_ip();
     for (auto& c : server.get_clients()) {
       if (c.get_socket() != socket) {
-        c.send_message(data.m_msg);
+        auto msg = fmt::format("[{}] {}", ip, sender.m_msg);
+        if(!c.send_message(msg))
+          io::get()->warn("failed to send message from {} to {}.", ip, c.get_ip());
       }
     }
   });
 
-  server.on_disconnect().add([&](tcp::client_data_t data) {
+  server.on_disconnect().add([&](tcp::client_data_t &data) {
     io::get()->info("{} disconnected.", data.m_client.get_ip());
   });
 
-  server.main_loop();
+  server.run();
 }

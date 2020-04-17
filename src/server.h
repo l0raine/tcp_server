@@ -17,18 +17,20 @@ class server {
 
   std::vector<client> m_clients;  // internal client list
 
-  event<client_data_t> connect_event;
-  event<client_data_t> disconnect_event;
-  event<message_data_t> receive_event;
+  event<client_data_t &> connect_event;
+  event<client_data_t &> disconnect_event;
+  event<message_data_t &> receive_event;
 
   fd_set m_server_set;
 
+  std::atomic<bool> m_running;
+
  public:
-  void start(const std::string &port) {
+  bool start(const std::string &port) {
     m_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (m_socket < 0) {
       io::get()->error("failed to create server socket.");
-      return;
+      return false;
     }
     struct addrinfo hints, *addrinfo = nullptr;
 
@@ -43,7 +45,7 @@ class server {
     if (ret != 0) {
       io::get()->error("failed to get address info.");
       close(m_socket);
-      return;
+      return false;
     }
 
     io::get()->info("binding port...");
@@ -52,7 +54,7 @@ class server {
       io::get()->error("failed to bind port.");
       freeaddrinfo(addrinfo);
       close(m_socket);
-      return;
+      return false;
     }
 
     freeaddrinfo(addrinfo);
@@ -62,12 +64,15 @@ class server {
       io::get()->error("failed to listen.");
       close(m_socket);
       freeaddrinfo(addrinfo);
-      return;
+      return false;
     }
+
+    m_running = true;
+    return true;
   }
 
-  int get_socket() { return m_socket; }
-  auto get_clients() { return m_clients; }
+  int &get_socket() { return m_socket; }
+  auto &get_clients() { return m_clients; }
   auto &on_connect() { return connect_event; }
   auto &on_disconnect() { return disconnect_event; }
   auto &on_recv() { return receive_event; }
@@ -154,14 +159,17 @@ class server {
     }
   }
 
-  void main_loop() {
-    for (;;) {
-      if (!ready()) break;
+  void run() {
+    std::thread t{[&]() {
+      while (m_running.load()) {
+        if (!ready()) break;
 
-      accept_client();
+        accept_client();
 
-      read();
-    }
+        read();
+      }
+    }};
+    t.join();
   }
 };
 
