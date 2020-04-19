@@ -18,7 +18,7 @@ class event {
     std::lock_guard<std::mutex> lock(event_lock);
 
     for (auto& func : m_funcs) {
-      if (func) func(params...);
+      if (func) func(std::forward<Args>(params)...);
     }
   }
 };

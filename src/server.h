@@ -23,10 +23,10 @@ class server {
 
   fd_set m_server_set;
 
-  std::atomic<bool> m_running;
+  std::atomic<bool> m_running = false;
 
  public:
-  bool start(const std::string &port) {
+  bool start(const std::string_view &port) {
     m_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (m_socket < 0) {
       io::get()->error("failed to create server socket.");
@@ -41,7 +41,7 @@ class server {
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE;
 
-    int ret = getaddrinfo(nullptr, port.c_str(), &hints, &addrinfo);
+    int ret = getaddrinfo(nullptr, port.data(), &hints, &addrinfo);
     if (ret != 0) {
       io::get()->error("failed to get address info.");
       close(m_socket);
@@ -68,6 +68,7 @@ class server {
     }
 
     m_running = true;
+    
     return true;
   }
 

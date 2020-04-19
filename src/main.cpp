@@ -24,10 +24,9 @@ int main(int argc, char* argv[]) {
   io::get()->info("starting local server on port {}", port);
 
   tcp::server server;
-  if(!server.start(port))
-    return 0;
-
-  io::get()->info("server listening for new connections.");
+  if(server.start(port)){
+    io::get()->info("server listening for new connections.");
+  }
 
   server.on_connect().add([&](tcp::client_data_t &data) {
     io::get()->info("client {} connected.", data.m_client.get_ip());
@@ -47,6 +46,7 @@ int main(int argc, char* argv[]) {
   });
 
   server.on_disconnect().add([&](tcp::client_data_t &data) {
+    close(data.m_client.get_socket());
     io::get()->info("{} disconnected.", data.m_client.get_ip());
   });
 
