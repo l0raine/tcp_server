@@ -24,6 +24,7 @@ class server {
   fd_set m_server_set;
 
   std::atomic<bool> m_running = false;
+  std::mutex server_mutex;
 
  public:
   bool start(const std::string_view &port) {
@@ -68,7 +69,7 @@ class server {
     }
 
     m_running = true;
-    
+
     return true;
   }
 
@@ -77,6 +78,8 @@ class server {
   auto &on_connect() { return connect_event; }
   auto &on_disconnect() { return disconnect_event; }
   auto &on_recv() { return receive_event; }
+  bool is_running() const { return m_running.load(); }
+  void set_running(const bool &val) { m_running = val; }
 
   bool ready() {
     FD_ZERO(&m_server_set);
@@ -90,10 +93,13 @@ class server {
       maxfd = std::max(s, maxfd);
     }
 
-    // check for activity every 2.5s
+    // check for activity every 5s
+    // this is just an arbitary number, i guess you could save cpu cycles by
+    // setting a higher value
+
     struct timeval tv;
-    tv.tv_sec = 2;
-    tv.tv_usec = 5000;
+    tv.tv_sec = 5;
+    tv.tv_usec = 0;
 
     int ret = select(maxfd + 1, &m_server_set, nullptr, nullptr, &tv);
     if (ret < 0) {
@@ -160,17 +166,10 @@ class server {
     }
   }
 
-  void run() {
-    std::thread t{[&]() {
-      while (m_running.load()) {
-        if (!ready()) break;
-
-        accept_client();
-
-        read();
-      }
-    }};
-    t.join();
+  void shutdown() {
+    io::get()->warn("server shutting down..");
+    FD_ZERO(&m_server_set);
+    if (m_socket) close(m_socket);
   }
 };
 
