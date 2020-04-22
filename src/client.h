@@ -15,4 +15,5 @@ class client {
 
   int &get_socket() { return m_socket; }
   auto &get_ip() const { return m_ip; }
+  void shutdown() { closesocket(m_socket); }
 };

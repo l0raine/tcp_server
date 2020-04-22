@@ -8,7 +8,11 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread")
+
+if (UNIX)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread")
+endif (UNIX)
+
 set(source_dir "${PROJECT_SOURCE_DIR}/src")
 
 file(GLOB source_files "${source_dir}/*.cpp")

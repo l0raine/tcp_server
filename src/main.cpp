@@ -48,8 +48,8 @@ int main(int argc, char *argv[]) {
   });
 
   server.on_disconnect().add([&](tcp::client_data_t &data) {
-    close(data.m_client.get_socket());
     io::get()->info("{} disconnected.", data.m_client.get_ip());
+    data.m_client.shutdown();
   });
 
   commands cmds;

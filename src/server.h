@@ -28,6 +28,15 @@ class server {
 
  public:
   bool start(const std::string_view &port) {
+#ifdef WINDOWS
+    WSADATA data;
+    int res = WSAStartup(MAKEWORD(2 ,2), &data);
+    if(res != 0){
+      io::get()->error("failed to initialize WSA.");
+      return false;
+    }
+#endif
+
     m_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (m_socket < 0) {
       io::get()->error("failed to create server socket.");
@@ -45,7 +54,7 @@ class server {
     int ret = getaddrinfo(nullptr, port.data(), &hints, &addrinfo);
     if (ret != 0) {
       io::get()->error("failed to get address info.");
-      close(m_socket);
+      closesocket(m_socket);
       return false;
     }
 
@@ -54,7 +63,7 @@ class server {
     if (ret < 0) {
       io::get()->error("failed to bind port.");
       freeaddrinfo(addrinfo);
-      close(m_socket);
+      closesocket(m_socket);
       return false;
     }
 
@@ -63,7 +72,7 @@ class server {
     ret = listen(m_socket, SOMAXCONN);
     if (ret < 0) {
       io::get()->error("failed to listen.");
-      close(m_socket);
+      closesocket(m_socket);
       freeaddrinfo(addrinfo);
       return false;
     }
@@ -126,7 +135,7 @@ class server {
     auto ip = inet_ntoa(addr.sin_addr);
     if (client_socket < 0) {
       io::get()->warn("{} failed to accept.", ip);
-      close(client_socket);
+      closesocket(client_socket);
     } else {
       client cli(client_socket, ip);
       m_clients.push_back(cli);
@@ -169,7 +178,13 @@ class server {
   void shutdown() {
     io::get()->warn("server shutting down..");
     FD_ZERO(&m_server_set);
-    if (m_socket) close(m_socket);
+    if (m_socket) {
+      closesocket(m_socket);
+    }
+
+#ifdef WINDOWS
+    WSACleanup();
+#endif
   }
 };
 
