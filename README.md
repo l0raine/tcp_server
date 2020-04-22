@@ -20,7 +20,7 @@ cd tcp_server
 mkdir build
 cd build
 cmake ..
-open ALL_BUILD and build in visual studio.
+msbuild ALL_BUILD.vcxproj
 ```
 
 ## Contributing
