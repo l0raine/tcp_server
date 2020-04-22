@@ -4,6 +4,7 @@ something like a chat server,this can be adapted to do anything in any use case.
 Compatible with both linux and windows.
 
 ## How to build
+- Linux
 ```
 git clone https://github.com/alpine971/tcp_server.git --recursive
 cd tcp_server
@@ -11,6 +12,15 @@ mkdir build
 cd build
 cmake ..
 make
+```
+- Windows
+```
+git clone https://github.com/alpine971/tcp_server.git --recursive
+cd tcp_server
+mkdir build
+cd build
+cmake ..
+open ALL_BUILD and build in visual studio.
 ```
 
 ## Contributing
